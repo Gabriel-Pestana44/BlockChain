@@ -7,6 +7,8 @@
 package BlockChain;
 import java.util.ArrayList;
 import java.util.List;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 //Caracteristicas da rede
 public class BlockChain {
@@ -14,25 +16,65 @@ public class BlockChain {
     private List<Block> chain;
     private Block activeBlock;
     private int dificult = 5;
+    private final String FILE_NAME = "BlockChain.json";
     public int qData = 2;
     public boolean redeIniciada = false;
 
     
     public BlockChain() {
         chain = new ArrayList<>();
+        loadData();
+    }
+    //Persistencia de Dados por Json
+    //Salvar dados 
+    public void save(){
+
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        
+        try (java.io.FileWriter writer = new java.io.FileWriter(FILE_NAME)){
+            
+            gson.toJson(this.chain, writer);
+            System.out.println("Dados Registrados com Suceso!!");
+        } catch (java.io.IOException e) {
+            System.out.println("ERR: "+ e.getMessage());
+        }
+    }
+
+    //Carregar dados
+    public void loadData(){
+        java.io.File file = new java.io.File(FILE_NAME);
+        
+        if (!file.exists())return;
+
+        try (java.io.FileReader reader = new java.io.FileReader(FILE_NAME)) {
+
+            java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<ArrayList<Block>>(){}.getType();
+            this.chain = new Gson().fromJson(reader,listType);
+            this.redeIniciada = !chain.isEmpty(); // Se tem blocos, a rede está iniciada
+            this.activeBlock = null; // Sempre começa sem bloco ativo
+            System.out.println("BlockChain Carregada (" + chain.size() + " blocos).");
+            
+        } catch (java.io.IOException e) {
+            System.err.println("Erro ao ler arquivo: " + e.getMessage());
+        }
     }
 
     //Cria a BlockChain
     public void initChain(){
+        //Evita duplicaçao de Blockchain
+        if(!chain.isEmpty()){
+            System.out.println("Blockchain já existente carregada do disco. Use 'craftBlock' para continuar.");
+            return;
+        }
+
         // Bloco Genesis
         Block genesis = new Block(0, System.currentTimeMillis(), "0", "Genesis Block");
         minerBlock(genesis);
         chain.add(genesis);
-        System.out.println("Primeiro Bloco Pra Ediçao Criado!!");
-        
-        // Prepara o primeiro bloco vazio 
-        activeBlock = new Block(1, System.currentTimeMillis(), genesis.getHash(), "");
+        save();
         redeIniciada = true;
+        activeBlock= null;
+        System.out.println("Bloco Gênesis (#0) criado e registrado. Use 'Criar Bloco' para começar a inserir dados.");
     }
     //Cria novo bloco
     public void craftBlock() {
@@ -41,8 +83,8 @@ public class BlockChain {
             return;
         }
         // O novo bloco aponta para o hash do último bloco minerado na chain
-        activeBlock = new Block(chain.size(), System.currentTimeMillis(), 
-                      chain.get(chain.size() - 1).getHash(), "");
+        String prevHash = chain.get(chain.size() - 1).getHash();
+        activeBlock = new Block(chain.size(), System.currentTimeMillis(), prevHash, "");
         System.out.println("Bloco #" + activeBlock.getIndex() + " criado com sucesso!");
     }
     //Fecha, Minera e Encadeia
@@ -53,11 +95,17 @@ public class BlockChain {
         }
         minerBlock(activeBlock);
         chain.add(activeBlock);
+        save();
         activeBlock = null; // Bloco passa a ser imutavel
         System.out.println("Bloco #" + (chain.size()-1) + " minerado e adicionado à cadeia.");
     }
 
     public boolean addInfo(String tipo, String valor) {
+
+        if (activeBlock == null) {
+        System.out.println("Erro: Não há bloco aberto! Crie um bloco primeiro.");
+        return false;
+        }
 
         // Formata o dado como se fosse um log
         String info = "TIPO: " + tipo + " | DADO: " + valor + "\n";
