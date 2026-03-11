@@ -33,8 +33,7 @@ public class App {
             System.out.println(" 5. Exibir Blockchain");
             System.out.println(" 6. Consultar por Hash");
             System.out.println(" 7. Verificar Validade da BlockChain");
-            System.out.println(" 8. Gerar Rede de Teste");
-            System.out.println(" 9. Sair");
+            System.out.println(" 8. Sair");
             System.out.println("==========================================");
             System.out.print(" Escolha uma opção: ");
 
@@ -112,16 +111,8 @@ public class App {
                         System.out.println("ALERTA: A Blockchain foi corrompida!");
                     }
                     break;
-                    //Inicia rede automatica ( Rede de teste )
-                case "8": 
-                    if (bc.redeIniciada) System.out.println("Rede já iniciada!");
-                    else {
-                        bc.gerarRedeTeste();
-                        System.out.println("Rede de teste gerada!");
-                    }
-                    break;
                     //Saida do programa
-                case "9": 
+                case "8": 
                     rodando = false;
                     break;
                 default: System.out.println(" Opção inválida!");
