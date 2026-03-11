@@ -40,23 +40,40 @@ public class BlockChain {
         }
     }
 
-    //Carregar dados
+    //Carregar dados do repositorio
     public void loadData(){
-        java.io.File file = new java.io.File(FILE_NAME);
-        
-        if (!file.exists())return;
+        try {
+        System.out.println("[REDE] Sincronizando com o GitHub (Pull)...");
+        runCommand("git", "pull", "--rebase", "origin", "main");
+    } catch (Exception e) {
+        System.out.println("[AVISO] Modo offline: não foi possível buscar atualizações.");
+    }
 
-        try (java.io.FileReader reader = new java.io.FileReader(FILE_NAME)) {
+    java.io.File file = new java.io.File(FILE_NAME);
+    if (!file.exists()) return;
 
-            java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<ArrayList<Block>>(){}.getType();
-            this.chain = new Gson().fromJson(reader,listType);
-            this.redeIniciada = !chain.isEmpty(); // Se tem blocos, a rede está iniciada
-            this.activeBlock = null; // Sempre começa sem bloco ativo
-            System.out.println("BlockChain Carregada (" + chain.size() + " blocos).");
-            
-        } catch (java.io.IOException e) {
-            System.err.println("Erro ao ler arquivo: " + e.getMessage());
+    try (java.io.FileReader reader = new java.io.FileReader(FILE_NAME)) {
+        java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<ArrayList<Block>>(){}.getType();
+        this.chain = new Gson().fromJson(reader, listType);
+
+        // Verificaçao de segurança
+        if (!chain.isEmpty() && !verifyImmutability()) {
+            System.err.println("\n###########################################");
+            System.err.println("  ERRO CRÍTICO: BLOCKCHAIN CORROMPIDA NO GITHUB!");
+            System.err.println("  A integridade da rede foi violada. Acesso negado.");
+            System.err.println("###########################################");
+            this.redeIniciada = false;
+            this.chain = new ArrayList<>(); // Limpa para evitar uso de dados podres (recomendaçao de ia)
+            return;
         }
+        // -----------------------------------
+
+        this.redeIniciada = !chain.isEmpty();
+        System.out.println("BlockChain Carregada e Validada (" + chain.size() + " blocos).");
+        
+    } catch (java.io.IOException e) {
+        System.err.println("Erro ao ler arquivo: " + e.getMessage());
+    }
     }
 
     //Cria a BlockChain
@@ -96,6 +113,7 @@ public class BlockChain {
         minerBlock(activeBlock);
         chain.add(activeBlock);
         save();
+        syncWithGithub();
         activeBlock = null; // Bloco passa a ser imutavel
         System.out.println("Bloco #" + (chain.size()-1) + " minerado e adicionado à cadeia.");
     }
@@ -199,7 +217,7 @@ public class BlockChain {
     }
     return true;
 }
-    // Gera uma rede de testes automática
+    // Gera uma rede de testes automática ( necessario retirar isso depois, quando ? eu nao sei)
     public void gerarRedeTeste() {
         initChain();
         for (int i = 0; i < 10; i++) {
@@ -230,6 +248,52 @@ public class BlockChain {
     public Block getActiveBlock() {
         return activeBlock;
     }
+
+    //Syncronizaçao com github via token
+    public void syncWithGithub() {
+    try {
+        String token = "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"; 
+        String repoUrl = "https://" + token + "@github.com/Gabriel-Pestana44/BlockChain.git";
+
+        System.out.println("\n[REDE] Propagando novo bloco para o GitHub...");
+
+        // Configurações de identidade para o Git não travar
+        runCommand("git", "config", "user.name", "Blockchain_Node_Miner");
+        runCommand("git", "config", "user.email", "miner@node.com");
+
+        // Conecta usando o token
+        runCommand("git", "remote", "set-url", "origin", repoUrl);
+
+        // Ciclo de Push
+        runCommand("git", "add", "BlockChain.json");
+        runCommand("git", "commit", "-m", "Novo bloco minerado por nó externo");
+        
+        int exitCode = runCommand("git", "push", "origin", "main");
+
+        if (exitCode == 0) {
+            System.out.println(">>> SUCESSO: Bloco aceito e propagado! <<<");
+        } else {
+            System.out.println(">>> ERRO: Falha no Push. Verifique o console do Bot no GitHub. <<<");
+        }
+
+        // Limpeza de segurança (Remove o token do remote)
+        runCommand("git", "remote", "set-url", "origin", "https://github.com/Gabriel-Pestana44/BlockChain.git");
+
+        } catch (Exception e) {
+            System.err.println("Erro na comunicação com a rede: " + e.getMessage());
+        }
+    }
+
+    // Método auxiliar para rodar os comandos no seu Linux
+    private int runCommand(String... command) throws Exception {
+
+        ProcessBuilder pb = new ProcessBuilder(command);
+        pb.inheritIO(); // Isso faz as mensagens do Git aparecerem no SEU terminal do VS Code
+        Process p = pb.start();
+        return p.waitFor();
+    }
 }
+
+//Se faz Necessario code review 
 
 
