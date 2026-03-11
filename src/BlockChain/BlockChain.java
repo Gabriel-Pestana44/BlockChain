@@ -253,7 +253,7 @@ public class BlockChain {
     public void syncWithGithub() {
     try {
         String token = "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"; 
-        String repoUrl = "https://" + token + "@github.com/Gabriel-Pestana44/BlockChain.git";
+        String repoUrl = "https://x-access-token:" + token + "@github.com/Gabriel-Pestana44/BlockChain.git";
 
         System.out.println("\n[REDE] Propagando novo bloco para o GitHub...");
 
