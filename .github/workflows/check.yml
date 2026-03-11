@@ -1,35 +1,40 @@
-name: Validador de Integridade da Rede
-
-concurrency:
-  group: blockchain-validation
-  cancel-in-progress: true
-
+name: Consenso e Integridade da Rede
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      block:
+        description: 'JSON do Bloco Minerado'
+        required: true
+
+concurrency: 
+  group: blockchain-consensus
+  cancel-in-progress: false
 
 jobs:
-  validate-blockchain:
+  validar-e-registrar:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Baixando o Código do Repositório
+      - name: Baixando Versão Oficial da Chain
         uses: actions/checkout@v4
 
-      - name: Configurando o ambiente Java 17
+      - name: Configurando Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
           java-version: '17'
+          distribution: 'temurin'
 
-      - name: Compilando o Projeto e o Validador
+      - name: Rodando o Validador de Consenso
         run: |
-          cd src
-          javac -cp "../lib/gson-2.11.0.jar:." BlockChain/*.java Validator.java
+          # Compila o validador que você deixou na raiz
+          javac -cp "lib/gson-2.11.0.jar" Validator.java
+          # Executa o validador passando o bloco que o Java enviou
+          java -cp "lib/gson-2.11.0.jar:." Validator '${{ github.event.inputs.block }}'
 
-      - name: Executando Teste de Imutabilidade
+      - name: Salvando Novo Bloco no Ledger
+        if: success()
         run: |
-          cd src
-          java -cp "../lib/gson-2.11.0.jar:." Validator
+          git config user.name "Bot_de_Consenso"
+          git config user.email "bot@blockchain.com"
+          git add BlockChain.json
+          git commit -m "Consenso: Bloco validado e anexado à rede"
+          git push

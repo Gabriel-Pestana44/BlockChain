@@ -253,36 +253,43 @@ public class BlockChain {
     //Syncronizaçao com github via token
     public void syncWithGithub() {
     try {
-        String token = "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"; 
-        String repoUrl = "https://x-access-token:" + token + "@github.com/Gabriel-Pestana44/BlockChain.git";
+        System.out.println("\n[REDE] Propagando novo bloco para o Consenso...");
 
-        System.out.println("\n[REDE] Propagando novo bloco para o GitHub...");
+        // 1. Pega o último bloco que você acabou de minerar
+        Block ultimoBloco = chain.get(chain.size() - 1);
+        String jsonBloco = new Gson().toJson(ultimoBloco);
 
-        // Configurações de identidade para o Git não travar
-        runCommand("git", "config", "user.name", "Blockchain_Node_Miner");
-        runCommand("git", "config", "user.email", "miner@node.com");
+        // 2. Prepara o "pacote" para o GitHub Actions
+        // O JSON precisa de escapes nas aspas para não quebrar a requisição
+        String jsonBlocoEscapado = jsonBloco.replace("\\", "\\\\").replace("\"", "\\\"");
+        String jsonPayload = "{\"ref\":\"main\", \"inputs\": {\"block\": \"" + jsonBlocoEscapado + "\"}}";
 
-        // Conecta usando o token
-        runCommand("git", "remote", "set-url", "origin", repoUrl);
-
-        // Ciclo de Push
-        runCommand("git", "add", "BlockChain.json");
-        runCommand("git", "commit", "-m", "Novo bloco minerado por nó externo");
+        // 3. Configura a conexão com a API do GitHub
+        java.net.URL url = java.net.URI.create("https://api.github.com/repos/Gabriel-Pestana44/BlockChain/actions/workflows/check.yml/dispatches").toURL();
+        java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
         
-        int exitCode = runCommand("git", "push", "origin", "main");
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Authorization", "Bearer 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");
+        conn.setRequestProperty("Accept", "application/vnd.github+json");
+        conn.setRequestProperty("X-GitHub-Api-Version", "2022-11-28");
+        conn.setDoOutput(true);
 
-        if (exitCode == 0) {
-            System.out.println(">>> SUCESSO: Bloco aceito e propagado! <<<");
-        } else {
-            System.out.println(">>> ERRO: Falha no Push. Verifique o console do Bot no GitHub. <<<");
+        // 4. Envia os dados
+        try (java.io.OutputStream os = conn.getOutputStream()) {
+            os.write(jsonPayload.getBytes());
         }
 
-        // Limpeza de segurança (Remove o token do remote)
-        runCommand("git", "remote", "set-url", "origin", "https://github.com/Gabriel-Pestana44/BlockChain.git");
+        // 5. Verifica se o "Porteiro" recebeu
+        int responseCode = conn.getResponseCode();
+        if (responseCode == 204) {
+            System.out.println(">>> SUCESSO: Bloco enviado para análise! Verifique a aba 'Actions' no seu GitHub. <<<");
+        } else {
+            System.out.println(">>> ERRO: Falha na comunicação com a rede. Código: " + responseCode + " <<<");
+        }
 
         } catch (Exception e) {
-            System.err.println("Erro na comunicação com a rede: " + e.getMessage());
-        }
+            System.err.println(">>> ERRO CRÍTICO DE CONEXÃO: " + e.getMessage());
+        }                      
     }
 
     // Método auxiliar para rodar os comandos no seu Linux
