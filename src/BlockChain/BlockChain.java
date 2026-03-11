@@ -269,7 +269,7 @@ public class BlockChain {
         runCommand("git", "add", "BlockChain.json");
         runCommand("git", "commit", "-m", "Novo bloco minerado por nó externo");
         
-        int exitCode = runCommand("git", "push", repoUrl, "main");
+        int exitCode = runCommand("git", "push", "origin", "main");
 
         if (exitCode == 0) {
             System.out.println(">>> SUCESSO: Bloco aceito e propagado! <<<");
