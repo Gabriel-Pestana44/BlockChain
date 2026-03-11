@@ -1,5 +1,9 @@
 name: Validador de Integridade da Rede
 
+concurrency:
+  group: blockchain-validation
+  cancel-in-progress: true
+
 on:
   push:
     branches: [ main ]
