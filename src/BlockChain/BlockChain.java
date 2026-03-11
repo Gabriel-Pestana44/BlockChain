@@ -44,6 +44,7 @@ public class BlockChain {
     public void loadData(){
         try {
         System.out.println("[REDE] Sincronizando com o GitHub (Pull)...");
+        runCommand("git", "checkout", "--", FILE_NAME);
         runCommand("git", "pull", "--rebase", "origin", "main");
     } catch (Exception e) {
         System.out.println("[AVISO] Modo offline: não foi possível buscar atualizações.");
@@ -268,7 +269,7 @@ public class BlockChain {
         runCommand("git", "add", "BlockChain.json");
         runCommand("git", "commit", "-m", "Novo bloco minerado por nó externo");
         
-        int exitCode = runCommand("git", "push", "origin", "main");
+        int exitCode = runCommand("git", "push", repoUrl, "main");
 
         if (exitCode == 0) {
             System.out.println(">>> SUCESSO: Bloco aceito e propagado! <<<");
