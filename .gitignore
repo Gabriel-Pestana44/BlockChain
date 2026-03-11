@@ -5,9 +5,6 @@ bin/
 # Configurações do VS Code
 .vscode/
 
-# Banco de dados local da Blockchain (Mantenha o repositório limpo)
-BlockChain.json
-
 # Arquivos temporários do sistema
 .DS_Store
 Thumbs.db
