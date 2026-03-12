@@ -6,10 +6,13 @@ on:
         description: 'JSON do Bloco Minerado'
         required: true
 
+permissions:
+  contents: write
+  actions: read
+
 concurrency: 
   group: blockchain-consensus
   cancel-in-progress: false
-
 jobs:
   validar-e-registrar:
     runs-on: ubuntu-latest
