@@ -5,7 +5,7 @@ bin/
 # Configurações do VS Code
 .vscode/
 
-src/BlockChain.json
+
 
 # Arquivos temporários do sistema
 .DS_Store
