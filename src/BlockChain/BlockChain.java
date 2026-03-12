@@ -253,44 +253,38 @@ public class BlockChain {
     //Syncronizaçao com github via token
     public void syncWithGithub() {
     try {
-        System.out.println("\n[REDE] Propagando novo bloco para o Consenso...");
+        System.out.println("\n[REDE] Enviando bloco para o Servidor de Consenso Local (Middleware)...");
 
-        // 1. Pega o último bloco que você acabou de minerar
+        // 1. Pega o último bloco que você acabou de minerar na lista 'chain'
         Block ultimoBloco = chain.get(chain.size() - 1);
         String jsonBloco = new Gson().toJson(ultimoBloco);
 
-        // 2. Prepara o "pacote" para o GitHub Actions
-        // O JSON precisa de escapes nas aspas para não quebrar a requisição
-        String jsonBlocoEscapado = jsonBloco.replace("\\", "\\\\").replace("\"", "\\\"");
-        String jsonPayload = "{\"ref\":\"main\", \"inputs\": {\"block\": \"" + jsonBlocoEscapado + "\"}}";
-
-        // 3. Configura a conexão com a API do GitHub
-        java.net.URL url = java.net.URI.create("https://api.github.com/repos/Gabriel-Pestana44/BlockChain/actions/workflows/check.yml/dispatches").toURL();
+        // 2. Conecta no seu servidor Python (que está rodando na porta 5000 do seu PC)
+        // OBS: No futuro, trocaremos 'localhost' pela URL do servidor na nuvem.
+        java.net.URL url = java.net.URI.create("https://blockchain-consenso-pestana.onrender.com/minerar").toURL();
         java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
         
         conn.setRequestMethod("POST");
-        conn.setRequestProperty("Authorization", "Bearer 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");
-        conn.setRequestProperty("Accept", "application/vnd.github+json");
-        conn.setRequestProperty("X-GitHub-Api-Version", "2022-11-28");
+        conn.setRequestProperty("Content-Type", "application/json"); // O Python espera JSON
         conn.setDoOutput(true);
 
-        // 4. Envia os dados
+        // 3. Envia o bloco puro para o Python
         try (java.io.OutputStream os = conn.getOutputStream()) {
-            os.write(jsonPayload.getBytes());
+            os.write(jsonBloco.getBytes());
         }
 
-        // 5. Verifica se o "Porteiro" recebeu
+        // 4. Verifica se o seu servidor Python recebeu e aceitou
         int responseCode = conn.getResponseCode();
-        if (responseCode == 204) {
-            System.out.println(">>> SUCESSO: Bloco enviado para análise! Verifique a aba 'Actions' no seu GitHub. <<<");
+        if (responseCode == 200) {
+            System.out.println(">>> SUCESSO: O servidor recebeu o bloco e repassou ao GitHub! <<<");
         } else {
-            System.out.println(">>> ERRO: Falha na comunicação com a rede. Código: " + responseCode + " <<<");
+            System.out.println(">>> ERRO: O servidor local retornou o código: " + responseCode);
         }
 
-        } catch (Exception e) {
-            System.err.println(">>> ERRO CRÍTICO DE CONEXÃO: " + e.getMessage());
-        }                      
-    }
+    } catch (Exception e) {
+        System.err.println(">>> ERRO DE CONEXÃO: O 'app.py' está rodando no terminal? " + e.getMessage());
+    }                      
+}
 
     // Método auxiliar para rodar os comandos no seu Linux
     private int runCommand(String... command) throws Exception {
