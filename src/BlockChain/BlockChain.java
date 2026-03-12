@@ -90,6 +90,7 @@ public class BlockChain {
         minerBlock(genesis);
         chain.add(genesis);
         save();
+        syncWithGithub();
         redeIniciada = true;
         activeBlock= null;
         System.out.println("Bloco Gênesis (#0) criado e registrado. Use 'Criar Bloco' para começar a inserir dados.");
