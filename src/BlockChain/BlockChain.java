@@ -16,7 +16,7 @@ public class BlockChain {
     private List<Block> chain;
     private Block activeBlock;
     private int dificult = 5;
-    private final String FILE_NAME = "BlockChain.json";
+    private final String FILE_NAME = "src/BlockChain.json";
     public int qData = 2;
     public boolean redeIniciada = false;
 

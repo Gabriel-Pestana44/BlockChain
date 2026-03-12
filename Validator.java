@@ -17,7 +17,7 @@ public class Validator {
             
             // 1. Carrega o Bloco sugerido e a Chain oficial do arquivo
             Map<String, Object> novoBloco = gson.fromJson(novoBlocoJson, new TypeToken<Map<String, Object>>(){}.getType());
-            String content = new String(Files.readAllBytes(Paths.get("BlockChain.json")));
+            String content = new String(Files.readAllBytes(Paths.get("src/BlockChain.json")));
             List<Map<String, Object>> chain = gson.fromJson(content, new TypeToken<List<Map<String, Object>>>(){}.getType());
 
             // 2. VERIFICAÇÃO 1: Integridade de toda a Chain existente
@@ -49,7 +49,7 @@ public class Validator {
 
             // 5. TUDO OK: Adiciona o bloco e salva o arquivo
             chain.add(novoBloco);
-            Files.write(Paths.get("BlockChain.json"), gson.toJson(chain).getBytes());
+            Files.write(Paths.get("src/BlockChain.json"), gson.toJson(chain).getBytes());
             System.out.println("CONSENSO ATINGIDO: Bloco validado e adicionado ao Ledger!");
             System.exit(0);
 

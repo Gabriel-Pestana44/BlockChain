@@ -35,6 +35,6 @@ jobs:
         run: |
           git config user.name "Bot_de_Consenso"
           git config user.email "bot@blockchain.com"
-          git add BlockChain.json
+          git add src/BlockChain.json
           git commit -m "Consenso: Bloco validado e anexado à rede"
           git push
