@@ -16,7 +16,7 @@ public class BlockChain {
     private List<Block> chain;
     private Block activeBlock;
     private int dificult = 5;
-    private final String FILE_NAME = "src/BlockChain.json";
+    private final String FILE_NAME = "BlockChain.json";
     public int qData = 2;
     public boolean redeIniciada = false;
 
@@ -44,7 +44,7 @@ public class BlockChain {
     public void loadData(){
         try {
         System.out.println("[REDE] Sincronizando com o GitHub (Pull)...");
-        runCommand("git", "checkout", "--", FILE_NAME);
+        runCommand("git", "checkout", "--", "src/BlockChain.json");
         runCommand("git", "pull", "--rebase", "origin", "main");
     } catch (Exception e) {
         System.out.println("[AVISO] Modo offline: não foi possível buscar atualizações.");
