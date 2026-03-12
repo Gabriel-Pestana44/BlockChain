@@ -1,4 +1,6 @@
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.ToNumberPolicy;
 import com.google.gson.reflect.TypeToken;
 import java.nio.file.*;
 import java.util.*;
@@ -11,10 +13,15 @@ public class Validator {
                 System.exit(1);
             }
 
-            Gson gson = new Gson();
+            // CONFIGURAÇÃO DO GSON: Estética + Números Grandes
+            Gson gson = new GsonBuilder()
+                .setPrettyPrinting() // Deixa o JSON indentado (bonitinho)
+                .setNumberToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE) // Evita o "E12" nos números
+                .create();
+
             String novoBlocoJson = args[0];
             
-            // 1. Carrega o Bloco e a Chain oficial de src/BlockChain.json
+            // 1. Carrega o Bloco e a Chain oficial
             Map<String, Object> novoBloco = gson.fromJson(novoBlocoJson, new TypeToken<Map<String, Object>>(){}.getType());
             Path path = Paths.get("src/BlockChain.json");
             String content = new String(Files.readAllBytes(path));
@@ -26,7 +33,6 @@ public class Validator {
                 Map<String, Object> atual = chain.get(i);
                 Map<String, Object> anterior = chain.get(i - 1);
                 
-                // USANDO "prevHash" PARA COMBINAR COM SEU JSON
                 if (!atual.get("prevHash").equals(anterior.get("hash"))) {
                     System.err.println("ERRO: Elo quebrado no bloco " + i);
                     System.exit(1);
@@ -35,29 +41,29 @@ public class Validator {
 
             // 3. VERIFICAÇÃO 2: O Novo Bloco aponta para o último oficial?
             Map<String, Object> ultimoOficial = chain.get(chain.size() - 1);
-            
-            // AJUSTE AQUI: Mudado de "previousHash" para "prevHash"
             if (!novoBloco.get("prevHash").equals(ultimoOficial.get("hash"))) {
                 System.err.println("FRAUDE: prevHash do novo bloco não bate com o hash oficial.");
                 System.exit(1);
             }
 
-            // 4. VERIFICAÇÃO 3: Prova de Trabalho (Dificuldade 5)
+            // 4. VERIFICAÇÃO 3: Prova de Trabalho
             String hashNovo = (String) novoBloco.get("hash");
             if (!hashNovo.startsWith("00000")) {
                 System.err.println("FRAUDE: Dificuldade insuficiente.");
                 System.exit(1);
             }
 
-            // 5. TUDO OK: Adiciona e Salva em src/BlockChain.json
+            // 5. TUDO OK: Adiciona e Salva com formatação
             chain.add(novoBloco);
-            Files.write(path, gson.toJson(chain).getBytes());
-            System.out.println("CONSENSO ATINGIDO: Bloco registrado na nuvem!");
+            String jsonFinal = gson.toJson(chain); // Aqui ele usa o Pretty Printing
+            Files.write(path, jsonFinal.getBytes());
+            
+            System.out.println("CONSENSO ATINGIDO: Bloco registrado na nuvem de forma organizada!");
             System.exit(0);
 
         } catch (Exception e) {
             System.err.println("Erro Crítico no Validador: " + e.getMessage());
-            e.printStackTrace(); // Isso ajuda a gente a ver a linha exata se falhar
+            e.printStackTrace();
             System.exit(1);
         }
     }
