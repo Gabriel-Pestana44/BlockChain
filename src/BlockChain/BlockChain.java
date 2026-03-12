@@ -42,13 +42,6 @@ public class BlockChain {
 
     //Carregar dados do repositorio
     public void loadData(){
-        try {
-        System.out.println("[REDE] Sincronizando com o GitHub (Pull)...");
-        runCommand("git", "checkout", "--", "src/BlockChain.json");
-        runCommand("git", "pull", "--rebase", "origin", "main");
-    } catch (Exception e) {
-        System.out.println("[AVISO] Modo offline: não foi possível buscar atualizações.");
-    }
 
     java.io.File file = new java.io.File(FILE_NAME);
     if (!file.exists()) return;
